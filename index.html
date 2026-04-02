@@ -801,7 +801,14 @@ const DEFAULT_ORDERS = {
 let state = {
   orders: JSON.parse(JSON.stringify(DEFAULT_ORDERS)),
   transactions: [],
-  firebaseConfig: null
+  firebaseConfig: {
+    apiKey: "AIzaSyBJP5EglzWuHULZFXCbHqp2iy8sJiHekrI",
+    authDomain: "borek-takip.firebaseapp.com",
+    projectId: "borek-takip",
+    databaseURL: "https://borek-takip-default-rtdb.europe-west1.firebasedatabase.app",
+    storageBucket: "borek-takip.firebasestorage.app",
+    appId: "1:483969586879:web:4a789f6aaf7135506b980a"
+  }
 };
 let currentDay = 'haftaici';
 let currentFilter = 'all';
@@ -823,7 +830,7 @@ function loadLocal() {
       if (!tx.id) tx.id = Date.now() + i;
       return tx;
     });
-    state.firebaseConfig = parsed.firebaseConfig || null;
+    state.firebaseConfig = parsed.firebaseConfig || state.firebaseConfig;
   }
 }
 
