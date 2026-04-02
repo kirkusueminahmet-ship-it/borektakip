@@ -1,0 +1,1343 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Börek Takip Sistemi</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,500;0,9..40,700;1,9..40,400&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #faf7f2;
+  --surface: #ffffff;
+  --surface-alt: #f5f0e8;
+  --border: #e8e0d4;
+  --text: #2c2418;
+  --text-dim: #8a7e6e;
+  --accent: #c4652a;
+  --accent-light: #f8efe8;
+  --accent-dark: #a04f1c;
+  --green: #3a7d44;
+  --green-light: #e8f5ea;
+  --red: #c0392b;
+  --red-light: #fdecea;
+  --blue: #2e6b9e;
+  --blue-light: #e8f1f8;
+  --shadow: 0 2px 12px rgba(44,36,24,0.06);
+  --shadow-lg: 0 8px 32px rgba(44,36,24,0.10);
+  --radius: 14px;
+  --radius-sm: 8px;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── HEADER ─── */
+.header {
+  background: linear-gradient(135deg, #c4652a 0%, #a04f1c 100%);
+  color: white;
+  padding: 20px 20px 70px;
+  text-align: center;
+  position: relative;
+}
+.header h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: 26px;
+  font-weight: 900;
+  letter-spacing: -0.5px;
+}
+.header .subtitle {
+  font-size: 12px;
+  opacity: 0.75;
+  margin-top: 4px;
+  font-weight: 300;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+.firebase-status {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  opacity: 0.85;
+}
+.firebase-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: #ff6b6b;
+  transition: background 0.3s;
+}
+.firebase-dot.connected { background: #51cf66; }
+
+/* ─── TABS ─── */
+.tab-bar {
+  display: flex;
+  gap: 6px;
+  margin: -40px 16px 16px;
+  position: relative;
+  z-index: 10;
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 5px;
+  box-shadow: var(--shadow-lg);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.tab-bar::-webkit-scrollbar { display: none; }
+.tab {
+  flex: 1;
+  min-width: max-content;
+  padding: 10px 12px;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-dim);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.25s;
+  white-space: nowrap;
+}
+.tab.active {
+  background: var(--accent);
+  color: white;
+  font-weight: 700;
+}
+
+/* ─── PAGES ─── */
+.page { display: none; padding: 0 16px 100px; animation: fadeUp 0.3s ease; }
+.page.active { display: block; }
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── CARDS ─── */
+.card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 20px;
+  margin-bottom: 14px;
+}
+.card-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.card-title .icon {
+  width: 32px; height: 32px;
+  border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+}
+
+/* ─── DAILY ORDER TABLE ─── */
+.day-selector {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.day-btn {
+  padding: 8px 16px;
+  border: 2px solid var(--border);
+  background: transparent;
+  border-radius: 24px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.day-btn.active {
+  border-color: var(--accent);
+  background: var(--accent-light);
+  color: var(--accent);
+}
+
+/* ─── PRODUCT ROW ─── */
+.product-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.product-row {
+  display: grid;
+  grid-template-columns: 1fr 64px 64px 50px 70px 80px;
+  gap: 6px;
+  align-items: center;
+  padding: 10px 12px;
+  background: var(--surface-alt);
+  border-radius: 10px;
+  font-size: 13px;
+  transition: background 0.2s;
+}
+.product-row:hover { background: #efe9dd; }
+.product-row.header-row {
+  background: transparent;
+  font-weight: 700;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-dim);
+  padding: 4px 12px;
+}
+.product-row .name {
+  font-weight: 600;
+  font-size: 12px;
+  line-height: 1.2;
+}
+.product-row input {
+  width: 100%;
+  padding: 6px 4px;
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 13px;
+  text-align: center;
+  background: white;
+  color: var(--text);
+  transition: border-color 0.2s;
+}
+.product-row input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+.product-row .calc {
+  font-weight: 700;
+  text-align: center;
+  color: var(--accent-dark);
+}
+.product-row .price-display {
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 12px;
+}
+.total-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, #c4652a, #a04f1c);
+  border-radius: 10px;
+  color: white;
+  margin-top: 12px;
+}
+.total-bar .label { font-weight: 500; font-size: 14px; }
+.total-bar .amount { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 900; }
+
+/* ─── BUTTONS ─── */
+.btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.btn-primary {
+  background: var(--accent);
+  color: white;
+  width: 100%;
+  justify-content: center;
+  margin-top: 16px;
+}
+.btn-primary:active { transform: scale(0.97); background: var(--accent-dark); }
+.btn-outline {
+  background: transparent;
+  border: 2px solid var(--border);
+  color: var(--text);
+}
+.btn-danger { background: var(--red); color: white; }
+.btn-sm { padding: 8px 14px; font-size: 12px; }
+
+/* ─── BALANCE PAGE ─── */
+.balance-summary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.balance-card {
+  padding: 16px;
+  border-radius: var(--radius);
+  text-align: center;
+}
+.balance-card.toplam { background: var(--blue-light); }
+.balance-card.odenen { background: var(--green-light); }
+.balance-card.iade { background: var(--red-light); }
+.balance-card.bakiye { background: var(--accent-light); grid-column: 1/-1; }
+.balance-card .bc-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+}
+.balance-card.toplam .bc-label { color: var(--blue); }
+.balance-card.odenen .bc-label { color: var(--green); }
+.balance-card.iade .bc-label { color: var(--red); }
+.balance-card.bakiye .bc-label { color: var(--accent); }
+.balance-card .bc-amount {
+  font-family: 'Playfair Display', serif;
+  font-size: 24px;
+  font-weight: 900;
+}
+.balance-card.bakiye .bc-amount { font-size: 32px; color: var(--accent-dark); }
+
+/* ─── TRANSACTION LIST ─── */
+.tx-list { display: flex; flex-direction: column; gap: 8px; }
+.tx-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--surface-alt);
+  border-radius: 10px;
+  font-size: 13px;
+}
+.tx-icon {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+.tx-icon.teslimat { background: var(--blue-light); }
+.tx-icon.odeme { background: var(--green-light); }
+.tx-icon.iade { background: var(--red-light); }
+.tx-info { flex: 1; min-width: 0; }
+.tx-info .tx-title { font-weight: 600; }
+.tx-info .tx-date { font-size: 11px; color: var(--text-dim); }
+.tx-info .tx-detail { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+.tx-amount { font-weight: 700; white-space: nowrap; }
+.tx-amount.positive { color: var(--green); }
+.tx-amount.negative { color: var(--red); }
+.tx-delete {
+  width: 32px; height: 32px;
+  border: none; background: var(--red-light);
+  color: var(--red);
+  cursor: pointer;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+.tx-delete:hover, .tx-delete:active { background: var(--red); color: white; }
+
+/* ─── FORM GROUPS ─── */
+.form-group { margin-bottom: 14px; }
+.form-group label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+}
+.form-group input, .form-group select, .form-group textarea {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--text);
+  background: white;
+  transition: border-color 0.2s;
+}
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+/* ─── MODAL ─── */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 100;
+  align-items: flex-end;
+  justify-content: center;
+  animation: fadeIn 0.2s;
+}
+.modal-overlay.show { display: flex; }
+.modal {
+  background: var(--surface);
+  border-radius: 20px 20px 0 0;
+  padding: 24px 20px 32px;
+  width: 100%;
+  max-width: 500px;
+  max-height: 85vh;
+  overflow-y: auto;
+  animation: slideUp 0.3s ease;
+}
+.modal-handle {
+  width: 36px; height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  margin: 0 auto 16px;
+}
+.modal h3 {
+  font-family: 'Playfair Display', serif;
+  font-size: 20px;
+  margin-bottom: 16px;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+/* ─── SETTINGS ─── */
+.setting-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+.setting-item:last-child { border-bottom: none; }
+.setting-label { font-weight: 500; font-size: 14px; }
+.setting-desc { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+
+.config-input {
+  width: 100%;
+  padding: 10px;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  font-family: 'DM Sans', monospace;
+  font-size: 12px;
+  margin-top: 4px;
+  color: var(--text);
+}
+.config-input:focus { outline: none; border-color: var(--accent); }
+
+/* ─── EMPTY STATE ─── */
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-dim);
+}
+.empty-state .emoji { font-size: 48px; margin-bottom: 12px; }
+.empty-state p { font-size: 14px; }
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 420px) {
+  .product-row {
+    grid-template-columns: 1fr 52px 52px 42px 56px 66px;
+    gap: 4px;
+    padding: 8px;
+    font-size: 11px;
+  }
+  .product-row .name { font-size: 11px; }
+  .product-row input { padding: 5px 2px; font-size: 12px; }
+  .balance-card .bc-amount { font-size: 20px; }
+  .balance-card.bakiye .bc-amount { font-size: 26px; }
+}
+
+/* ─── FILTER CHIPS ─── */
+.filter-chips {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.chip {
+  padding: 6px 14px;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  border-radius: 20px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.chip.active { border-color: var(--accent); background: var(--accent-light); color: var(--accent); }
+
+/* ─── DATE HEADER ─── */
+.date-group-header {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 16px 0 8px;
+  padding-left: 4px;
+}
+.date-group-header:first-child { margin-top: 0; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Börek Takip</h1>
+  <div class="subtitle">Sipariş & Bakiye Yönetimi</div>
+  <div class="firebase-status">
+    <div class="firebase-dot" id="fbDot"></div>
+    <span id="fbStatus">Bağlantı yok</span>
+  </div>
+</div>
+
+<div class="tab-bar">
+  <button class="tab active" data-page="orders">Sipariş</button>
+  <button class="tab" data-page="deliveries">Teslimatlar</button>
+  <button class="tab" data-page="balance">Bakiye</button>
+  <button class="tab" data-page="settings">Ayarlar</button>
+</div>
+
+<!-- ════════ SİPARİŞ SAYFASI ════════ -->
+<div class="page active" id="page-orders">
+  <div class="card">
+    <div class="card-title">
+      <div class="icon" style="background:var(--accent-light);color:var(--accent)">📋</div>
+      Günlük Sipariş Listesi
+    </div>
+
+    <div class="day-selector">
+      <button class="day-btn active" data-day="haftaici">Hafta İçi</button>
+      <button class="day-btn" data-day="cumartesi">Cumartesi</button>
+      <button class="day-btn" data-day="pazar">Pazar</button>
+    </div>
+
+    <div class="product-grid">
+      <div class="product-row header-row">
+        <div>Ürün</div>
+        <div style="text-align:center">B.Tava</div>
+        <div style="text-align:center">Tepsi</div>
+        <div style="text-align:center">Top.</div>
+        <div style="text-align:center">Fiyat</div>
+        <div style="text-align:center">Tutar</div>
+      </div>
+      <div id="productRows"></div>
+    </div>
+
+    <div class="total-bar">
+      <div class="label">Genel Toplam</div>
+      <div class="amount" id="orderTotal">₺0</div>
+    </div>
+
+    <button class="btn btn-primary" id="btnSaveOrder">💾 Siparişi Kaydet</button>
+  </div>
+</div>
+
+<!-- ════════ TESLİMATLAR SAYFASI ════════ -->
+<div class="page" id="page-deliveries">
+  <div class="card">
+    <div class="card-title">
+      <div class="icon" style="background:var(--blue-light);color:var(--blue)">🚚</div>
+      Yeni Teslimat Kaydet
+    </div>
+    <div class="form-group">
+      <label>Tarih</label>
+      <input type="date" id="deliveryDate">
+    </div>
+    <div class="form-group">
+      <label>Gün Tipi</label>
+      <select id="deliveryDayType">
+        <option value="haftaici">Hafta İçi</option>
+        <option value="cumartesi">Cumartesi</option>
+        <option value="pazar">Pazar</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Not (opsiyonel)</label>
+      <input type="text" id="deliveryNote" placeholder="Ek bilgi...">
+    </div>
+    <button class="btn btn-primary" id="btnSaveDelivery">🚚 Teslimatı Kaydet</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title">
+      <div class="icon" style="background:var(--red-light);color:var(--red)">↩️</div>
+      İade Kaydet
+    </div>
+    <div class="form-group">
+      <label>Tarih</label>
+      <input type="date" id="returnDate">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Ürün</label>
+        <select id="returnProduct"></select>
+      </div>
+      <div class="form-group">
+        <label>Adet</label>
+        <input type="number" id="returnQty" min="1" value="1">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Not (opsiyonel)</label>
+      <input type="text" id="returnNote" placeholder="İade sebebi...">
+    </div>
+    <button class="btn btn-primary" style="background:var(--red)" id="btnSaveReturn">↩️ İadeyi Kaydet</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title">
+      <div class="icon" style="background:var(--green-light);color:var(--green)">💰</div>
+      Ödeme Kaydet
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Tarih</label>
+        <input type="date" id="paymentDate">
+      </div>
+      <div class="form-group">
+        <label>Tutar (₺)</label>
+        <input type="number" id="paymentAmount" min="0" step="0.01" placeholder="0.00">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Not (opsiyonel)</label>
+      <input type="text" id="paymentNote" placeholder="Ödeme detayı...">
+    </div>
+    <button class="btn btn-primary" style="background:var(--green)" id="btnSavePayment">💰 Ödemeyi Kaydet</button>
+  </div>
+</div>
+
+<!-- ════════ BAKİYE SAYFASI ════════ -->
+<div class="page" id="page-balance">
+  <div class="balance-summary">
+    <div class="balance-card toplam">
+      <div class="bc-label">Toplam Borç</div>
+      <div class="bc-amount" id="balToplam">₺0</div>
+    </div>
+    <div class="balance-card odenen">
+      <div class="bc-label">Ödenen</div>
+      <div class="bc-amount" id="balOdenen">₺0</div>
+    </div>
+    <div class="balance-card iade">
+      <div class="bc-label">İade Düşüm</div>
+      <div class="bc-amount" id="balIade">₺0</div>
+    </div>
+    <div class="balance-card bakiye">
+      <div class="bc-label">Kalan Bakiye</div>
+      <div class="bc-amount" id="balKalan">₺0</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">
+      <div class="icon" style="background:var(--surface-alt)">📒</div>
+      İşlem Geçmişi
+    </div>
+    <div class="filter-chips">
+      <button class="chip active" data-filter="all">Tümü</button>
+      <button class="chip" data-filter="teslimat">Teslimat</button>
+      <button class="chip" data-filter="iade">İade</button>
+      <button class="chip" data-filter="odeme">Ödeme</button>
+    </div>
+    <div class="tx-list" id="txList">
+      <div class="empty-state">
+        <div class="emoji">📭</div>
+        <p>Henüz işlem kaydı yok</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ AYARLAR SAYFASI ════════ -->
+<div class="page" id="page-settings">
+  <div class="card">
+    <div class="card-title">
+      <div class="icon" style="background:var(--accent-light);color:var(--accent)">🔥</div>
+      Firebase Yapılandırması
+    </div>
+    <p style="font-size:13px;color:var(--text-dim);margin-bottom:14px;">
+      Firebase Console'dan aldığınız bilgileri buraya girin. Kaydettikten sonra veriler gerçek zamanlı senkronize edilir.
+    </p>
+    <div class="form-group">
+      <label>API Key</label>
+      <input class="config-input" id="cfgApiKey" placeholder="AIza...">
+    </div>
+    <div class="form-group">
+      <label>Auth Domain</label>
+      <input class="config-input" id="cfgAuthDomain" placeholder="projeniz.firebaseapp.com">
+    </div>
+    <div class="form-group">
+      <label>Project ID</label>
+      <input class="config-input" id="cfgProjectId" placeholder="projeniz">
+    </div>
+    <div class="form-group">
+      <label>Database URL</label>
+      <input class="config-input" id="cfgDbUrl" placeholder="https://projeniz-default-rtdb.firebaseio.com">
+    </div>
+    <div class="form-group">
+      <label>Storage Bucket</label>
+      <input class="config-input" id="cfgBucket" placeholder="projeniz.appspot.com">
+    </div>
+    <div class="form-group">
+      <label>App ID</label>
+      <input class="config-input" id="cfgAppId" placeholder="1:123:web:abc...">
+    </div>
+    <button class="btn btn-primary" id="btnSaveConfig">🔥 Firebase Bağlantısını Kaydet</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title">
+      <div class="icon" style="background:var(--surface-alt)">💾</div>
+      Veri Yönetimi
+    </div>
+    <div class="setting-item">
+      <div>
+        <div class="setting-label">Verileri Dışa Aktar</div>
+        <div class="setting-desc">Tüm verilerinizi JSON olarak indirin</div>
+      </div>
+      <button class="btn btn-outline btn-sm" id="btnExport">Dışa Aktar</button>
+    </div>
+    <div class="setting-item">
+      <div>
+        <div class="setting-label">Verileri İçe Aktar</div>
+        <div class="setting-desc">JSON dosyasından geri yükleyin</div>
+      </div>
+      <button class="btn btn-outline btn-sm" id="btnImport">İçe Aktar</button>
+    </div>
+    <div class="setting-item">
+      <div>
+        <div class="setting-label">Tüm Verileri Sil</div>
+        <div class="setting-desc">Dikkat: Bu işlem geri alınamaz!</div>
+      </div>
+      <button class="btn btn-danger btn-sm" id="btnClearAll">Sil</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ MODAL ════════ -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modalContent">
+    <div class="modal-handle"></div>
+  </div>
+</div>
+
+<input type="file" id="importFile" accept=".json" style="display:none">
+
+<!-- ════════ FIREBASE SDK ════════ -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<script>
+// ═══════════════════════════════════════════
+// DATA MODEL
+// ═══════════════════════════════════════════
+const PRODUCTS = [
+  { id: 'boyoz', name: 'Boyoz', price: 13 },
+  { id: 'tahinli', name: 'Tahinli Boyoz', price: 20 },
+  { id: 'cikolatali', name: 'Çikolatalı Boyoz', price: 20 },
+  { id: 'domates', name: 'Domates Kaşarlı', price: 18 },
+  { id: 'peynirli', name: 'Peynirli Çatal', price: 60 },
+  { id: 'kiymali', name: 'Kıymalı Çatal', price: 60 },
+  { id: 'patatesli', name: 'Patatesli Çatal', price: 60 },
+  { id: 'patlicanli', name: 'Patlıcanlı Çatal', price: 60 }
+];
+
+const DEFAULT_ORDERS = {
+  haftaici: {
+    boyoz: { tava: 15, tepsi: 15 },
+    tahinli: { tava: 10, tepsi: 8 },
+    cikolatali: { tava: 0, tepsi: 0 },
+    domates: { tava: 15, tepsi: 8 },
+    peynirli: { tava: 8, tepsi: 6 },
+    kiymali: { tava: 15, tepsi: 8 },
+    patatesli: { tava: 0, tepsi: 6 },
+    patlicanli: { tava: 0, tepsi: 0 }
+  },
+  cumartesi: {
+    boyoz: { tava: 15, tepsi: 20 },
+    tahinli: { tava: 8, tepsi: 10 },
+    cikolatali: { tava: 0, tepsi: 0 },
+    domates: { tava: 5, tepsi: 8 },
+    peynirli: { tava: 6, tepsi: 5 },
+    kiymali: { tava: 8, tepsi: 10 },
+    patatesli: { tava: 0, tepsi: 3 },
+    patlicanli: { tava: 0, tepsi: 0 }
+  },
+  pazar: {
+    boyoz: { tava: 0, tepsi: 20 },
+    tahinli: { tava: 0, tepsi: 10 },
+    cikolatali: { tava: 0, tepsi: 0 },
+    domates: { tava: 0, tepsi: 8 },
+    peynirli: { tava: 0, tepsi: 5 },
+    kiymali: { tava: 0, tepsi: 10 },
+    patatesli: { tava: 0, tepsi: 3 },
+    patlicanli: { tava: 0, tepsi: 0 }
+  }
+};
+
+// ═══════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════
+let state = {
+  orders: JSON.parse(JSON.stringify(DEFAULT_ORDERS)),
+  transactions: [],
+  firebaseConfig: null
+};
+let currentDay = 'haftaici';
+let currentFilter = 'all';
+let db = null;
+let dbRef = null;
+
+// ═══════════════════════════════════════════
+// LOCAL STORAGE
+// ═══════════════════════════════════════════
+function saveLocal() {
+  localStorage.setItem('borekTakip', JSON.stringify(state));
+}
+function loadLocal() {
+  const saved = localStorage.getItem('borekTakip');
+  if (saved) {
+    const parsed = JSON.parse(saved);
+    state.orders = parsed.orders || JSON.parse(JSON.stringify(DEFAULT_ORDERS));
+    state.transactions = (parsed.transactions || []).map((tx, i) => {
+      if (!tx.id) tx.id = Date.now() + i;
+      return tx;
+    });
+    state.firebaseConfig = parsed.firebaseConfig || null;
+  }
+}
+
+// ═══════════════════════════════════════════
+// FIREBASE
+// ═══════════════════════════════════════════
+function initFirebase() {
+  if (!state.firebaseConfig) return;
+  try {
+    if (!firebase.apps.length) {
+      firebase.initializeApp(state.firebaseConfig);
+    }
+    db = firebase.database();
+    dbRef = db.ref('borekTakip');
+
+    dbRef.on('value', (snap) => {
+      const data = snap.val();
+      if (data) {
+        state.orders = data.orders || state.orders;
+        state.transactions = (data.transactions || []).map((tx, i) => {
+          if (!tx.id) tx.id = Date.now() + i;
+          return tx;
+        });
+        renderAll();
+      }
+    });
+
+    document.getElementById('fbDot').classList.add('connected');
+    document.getElementById('fbStatus').textContent = 'Bağlı';
+
+    db.ref('.info/connected').on('value', (snap) => {
+      if (snap.val() === true) {
+        document.getElementById('fbDot').classList.add('connected');
+        document.getElementById('fbStatus').textContent = 'Bağlı';
+      } else {
+        document.getElementById('fbDot').classList.remove('connected');
+        document.getElementById('fbStatus').textContent = 'Bağlantı yok';
+      }
+    });
+  } catch (e) {
+    console.error('Firebase hatası:', e);
+    document.getElementById('fbStatus').textContent = 'Hata!';
+  }
+}
+
+function syncToFirebase() {
+  if (dbRef) {
+    dbRef.set({
+      orders: state.orders,
+      transactions: state.transactions,
+      lastUpdated: Date.now()
+    });
+  }
+}
+
+// ═══════════════════════════════════════════
+// RENDER: ORDERS
+// ═══════════════════════════════════════════
+function renderOrders() {
+  const container = document.getElementById('productRows');
+  const dayOrders = state.orders[currentDay];
+  let html = '';
+  let grandTotal = 0;
+
+  PRODUCTS.forEach(p => {
+    const o = dayOrders[p.id] || { tava: 0, tepsi: 0 };
+    const total = (parseInt(o.tava) || 0) + (parseInt(o.tepsi) || 0);
+    const tutar = total * p.price;
+    grandTotal += tutar;
+
+    html += `
+      <div class="product-row">
+        <div class="name">${p.name}</div>
+        <input type="number" min="0" value="${o.tava || 0}"
+               data-product="${p.id}" data-field="tava"
+               oninput="updateOrder(this)">
+        <input type="number" min="0" value="${o.tepsi || 0}"
+               data-product="${p.id}" data-field="tepsi"
+               oninput="updateOrder(this)">
+        <div class="calc">${total}</div>
+        <div class="price-display">₺${p.price}</div>
+        <div class="calc">₺${tutar.toLocaleString('tr-TR')}</div>
+      </div>`;
+  });
+
+  container.innerHTML = html;
+  document.getElementById('orderTotal').textContent = `₺${grandTotal.toLocaleString('tr-TR')}`;
+}
+
+function updateOrder(el) {
+  const pid = el.dataset.product;
+  const field = el.dataset.field;
+  const val = parseInt(el.value) || 0;
+  if (!state.orders[currentDay][pid]) state.orders[currentDay][pid] = { tava: 0, tepsi: 0 };
+  state.orders[currentDay][pid][field] = val;
+  renderOrders();
+  saveLocal();
+}
+
+// ═══════════════════════════════════════════
+// RENDER: BALANCE
+// ═══════════════════════════════════════════
+function renderBalance() {
+  let toplamBorc = 0;
+  let toplamOdeme = 0;
+  let toplamIade = 0;
+
+  state.transactions.forEach(tx => {
+    if (tx.type === 'teslimat') toplamBorc += tx.amount;
+    else if (tx.type === 'odeme') toplamOdeme += tx.amount;
+    else if (tx.type === 'iade') toplamIade += tx.amount;
+  });
+
+  const kalan = toplamBorc - toplamOdeme - toplamIade;
+
+  document.getElementById('balToplam').textContent = `₺${toplamBorc.toLocaleString('tr-TR')}`;
+  document.getElementById('balOdenen').textContent = `₺${toplamOdeme.toLocaleString('tr-TR')}`;
+  document.getElementById('balIade').textContent = `₺${toplamIade.toLocaleString('tr-TR')}`;
+  document.getElementById('balKalan').textContent = `₺${kalan.toLocaleString('tr-TR')}`;
+
+  renderTransactions();
+}
+
+function renderTransactions() {
+  const container = document.getElementById('txList');
+  let txs = [...state.transactions].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  if (currentFilter !== 'all') {
+    txs = txs.filter(t => t.type === currentFilter);
+  }
+
+  if (txs.length === 0) {
+    container.innerHTML = `<div class="empty-state"><div class="emoji">📭</div><p>Kayıt bulunamadı</p></div>`;
+    return;
+  }
+
+  let html = '';
+  let lastDate = '';
+
+  txs.forEach((tx, i) => {
+    const d = new Date(tx.date);
+    const dateStr = d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+
+    if (dateStr !== lastDate) {
+      html += `<div class="date-group-header">${dateStr}</div>`;
+      lastDate = dateStr;
+    }
+
+    const icons = { teslimat: '🚚', odeme: '💰', iade: '↩️' };
+    const labels = { teslimat: 'Teslimat', odeme: 'Ödeme', iade: 'İade' };
+    const amountClass = tx.type === 'odeme' ? 'positive' : (tx.type === 'iade' ? 'negative' : '');
+    const prefix = tx.type === 'odeme' ? '-' : (tx.type === 'iade' ? '-' : '+');
+
+    html += `
+      <div class="tx-item">
+        <div class="tx-icon ${tx.type}">${icons[tx.type]}</div>
+        <div class="tx-info">
+          <div class="tx-title">${labels[tx.type]}</div>
+          <div class="tx-date">${d.toLocaleDateString('tr-TR')}</div>
+          ${tx.note ? `<div class="tx-detail">${tx.note}</div>` : ''}
+          ${tx.detail ? `<div class="tx-detail">${tx.detail}</div>` : ''}
+        </div>
+        <div class="tx-amount ${amountClass}">${prefix}₺${tx.amount.toLocaleString('tr-TR')}</div>
+        <button class="tx-delete" onclick="deleteTx('${tx.id}')" title="Sil">✕</button>
+      </div>`;
+  });
+
+  container.innerHTML = html;
+
+  // Swipe-to-delete for mobile
+  container.querySelectorAll('.tx-item').forEach(item => {
+    let startX = 0, currentX = 0, swiping = false;
+    item.addEventListener('touchstart', e => {
+      startX = e.touches[0].clientX;
+      swiping = true;
+      item.style.transition = 'none';
+    }, { passive: true });
+    item.addEventListener('touchmove', e => {
+      if (!swiping) return;
+      currentX = e.touches[0].clientX - startX;
+      if (currentX < 0) {
+        item.style.transform = `translateX(${Math.max(currentX, -100)}px)`;
+      }
+    }, { passive: true });
+    item.addEventListener('touchend', () => {
+      swiping = false;
+      item.style.transition = 'transform 0.3s ease';
+      if (currentX < -60) {
+        const btn = item.querySelector('.tx-delete');
+        if (btn) btn.click();
+      }
+      item.style.transform = '';
+      currentX = 0;
+    });
+  });
+}
+
+function deleteTx(txId) {
+  const realIndex = state.transactions.findIndex(t => String(t.id) === String(txId));
+  
+  if (realIndex === -1) {
+    showToast('İşlem bulunamadı!', true);
+    return;
+  }
+  
+  const tx = state.transactions[realIndex];
+  const labels = { teslimat: 'Teslimat', odeme: 'Ödeme', iade: 'İade' };
+  
+  if (confirm(`${labels[tx.type]} kaydını silmek istediğinize emin misiniz?\n₺${tx.amount.toLocaleString('tr-TR')}`)) {
+    state.transactions.splice(realIndex, 1);
+    saveLocal();
+    syncToFirebase();
+    renderBalance();
+    showToast('İşlem silindi');
+  }
+}
+
+// ═══════════════════════════════════════════
+// RENDER: SETTINGS
+// ═══════════════════════════════════════════
+function renderSettings() {
+  if (state.firebaseConfig) {
+    document.getElementById('cfgApiKey').value = state.firebaseConfig.apiKey || '';
+    document.getElementById('cfgAuthDomain').value = state.firebaseConfig.authDomain || '';
+    document.getElementById('cfgProjectId').value = state.firebaseConfig.projectId || '';
+    document.getElementById('cfgDbUrl').value = state.firebaseConfig.databaseURL || '';
+    document.getElementById('cfgBucket').value = state.firebaseConfig.storageBucket || '';
+    document.getElementById('cfgAppId').value = state.firebaseConfig.appId || '';
+  }
+}
+
+function populateReturnProducts() {
+  const sel = document.getElementById('returnProduct');
+  sel.innerHTML = PRODUCTS.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+}
+
+function renderAll() {
+  renderOrders();
+  renderBalance();
+  renderSettings();
+}
+
+// ═══════════════════════════════════════════
+// CALCULATE ORDER TOTAL FOR A DAY TYPE
+// ═══════════════════════════════════════════
+function calcDayTotal(dayType) {
+  const dayOrders = state.orders[dayType];
+  let total = 0;
+  PRODUCTS.forEach(p => {
+    const o = dayOrders[p.id] || { tava: 0, tepsi: 0 };
+    const qty = (parseInt(o.tava) || 0) + (parseInt(o.tepsi) || 0);
+    total += qty * p.price;
+  });
+  return total;
+}
+
+function buildDeliveryDetail(dayType) {
+  const dayOrders = state.orders[dayType];
+  let parts = [];
+  PRODUCTS.forEach(p => {
+    const o = dayOrders[p.id] || { tava: 0, tepsi: 0 };
+    const qty = (parseInt(o.tava) || 0) + (parseInt(o.tepsi) || 0);
+    if (qty > 0) parts.push(`${p.name}: ${qty}`);
+  });
+  return parts.join(', ');
+}
+
+// ═══════════════════════════════════════════
+// EVENT HANDLERS
+// ═══════════════════════════════════════════
+
+// Tab navigation
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById(`page-${tab.dataset.page}`).classList.add('active');
+  });
+});
+
+// Day selector
+document.querySelectorAll('.day-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.day-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentDay = btn.dataset.day;
+    renderOrders();
+  });
+});
+
+// Filter chips
+document.querySelectorAll('.chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    currentFilter = chip.dataset.filter;
+    renderTransactions();
+  });
+});
+
+// Save order
+document.getElementById('btnSaveOrder').addEventListener('click', () => {
+  saveLocal();
+  syncToFirebase();
+  showToast('Sipariş kaydedildi!');
+});
+
+// Save delivery
+document.getElementById('btnSaveDelivery').addEventListener('click', () => {
+  const date = document.getElementById('deliveryDate').value;
+  const dayType = document.getElementById('deliveryDayType').value;
+  const note = document.getElementById('deliveryNote').value.trim();
+  
+  if (!date) { showToast('Lütfen tarih seçin!', true); return; }
+  
+  const amount = calcDayTotal(dayType);
+  const detail = buildDeliveryDetail(dayType);
+  const dayLabels = { haftaici: 'Hafta İçi', cumartesi: 'Cumartesi', pazar: 'Pazar' };
+
+  state.transactions.push({
+    type: 'teslimat',
+    date,
+    amount,
+    note: note || dayLabels[dayType],
+    detail,
+    dayType,
+    id: Date.now()
+  });
+
+  saveLocal();
+  syncToFirebase();
+  showToast(`Teslimat kaydedildi: ₺${amount.toLocaleString('tr-TR')}`);
+  document.getElementById('deliveryNote').value = '';
+  renderBalance();
+});
+
+// Save return
+document.getElementById('btnSaveReturn').addEventListener('click', () => {
+  const date = document.getElementById('returnDate').value;
+  const productId = document.getElementById('returnProduct').value;
+  const qty = parseInt(document.getElementById('returnQty').value) || 0;
+  const note = document.getElementById('returnNote').value.trim();
+
+  if (!date) { showToast('Lütfen tarih seçin!', true); return; }
+  if (qty <= 0) { showToast('Lütfen adet girin!', true); return; }
+
+  const product = PRODUCTS.find(p => p.id === productId);
+  const amount = qty * product.price;
+
+  state.transactions.push({
+    type: 'iade',
+    date,
+    amount,
+    note: note || `${product.name} x${qty}`,
+    detail: `${product.name}: ${qty} adet × ₺${product.price} = ₺${amount}`,
+    id: Date.now()
+  });
+
+  saveLocal();
+  syncToFirebase();
+  showToast(`İade kaydedildi: -₺${amount.toLocaleString('tr-TR')}`);
+  document.getElementById('returnQty').value = '1';
+  document.getElementById('returnNote').value = '';
+  renderBalance();
+});
+
+// Save payment
+document.getElementById('btnSavePayment').addEventListener('click', () => {
+  const date = document.getElementById('paymentDate').value;
+  const amount = parseFloat(document.getElementById('paymentAmount').value) || 0;
+  const note = document.getElementById('paymentNote').value.trim();
+
+  if (!date) { showToast('Lütfen tarih seçin!', true); return; }
+  if (amount <= 0) { showToast('Lütfen tutar girin!', true); return; }
+
+  state.transactions.push({
+    type: 'odeme',
+    date,
+    amount,
+    note: note || 'Ödeme',
+    id: Date.now()
+  });
+
+  saveLocal();
+  syncToFirebase();
+  showToast(`Ödeme kaydedildi: ₺${amount.toLocaleString('tr-TR')}`);
+  document.getElementById('paymentAmount').value = '';
+  document.getElementById('paymentNote').value = '';
+  renderBalance();
+});
+
+// Firebase config save
+document.getElementById('btnSaveConfig').addEventListener('click', () => {
+  const config = {
+    apiKey: document.getElementById('cfgApiKey').value.trim(),
+    authDomain: document.getElementById('cfgAuthDomain').value.trim(),
+    projectId: document.getElementById('cfgProjectId').value.trim(),
+    databaseURL: document.getElementById('cfgDbUrl').value.trim(),
+    storageBucket: document.getElementById('cfgBucket').value.trim(),
+    appId: document.getElementById('cfgAppId').value.trim()
+  };
+
+  if (!config.apiKey || !config.databaseURL) {
+    showToast('API Key ve Database URL gerekli!', true);
+    return;
+  }
+
+  state.firebaseConfig = config;
+  saveLocal();
+  initFirebase();
+  syncToFirebase();
+  showToast('Firebase bağlandı!');
+});
+
+// Export
+document.getElementById('btnExport').addEventListener('click', () => {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `borek-takip-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Veriler dışa aktarıldı');
+});
+
+// Import
+document.getElementById('btnImport').addEventListener('click', () => {
+  document.getElementById('importFile').click();
+});
+document.getElementById('importFile').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      state = { ...state, ...data };
+      saveLocal();
+      syncToFirebase();
+      renderAll();
+      showToast('Veriler içe aktarıldı!');
+    } catch (err) {
+      showToast('Geçersiz dosya!', true);
+    }
+  };
+  reader.readAsText(file);
+});
+
+// Clear all
+document.getElementById('btnClearAll').addEventListener('click', () => {
+  if (confirm('Tüm verileri silmek istediğinize emin misiniz?\nBu işlem geri alınamaz!')) {
+    state.orders = JSON.parse(JSON.stringify(DEFAULT_ORDERS));
+    state.transactions = [];
+    saveLocal();
+    syncToFirebase();
+    renderAll();
+    showToast('Tüm veriler silindi');
+  }
+});
+
+// ═══════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════
+function showToast(msg, isError = false) {
+  const existing = document.querySelector('.toast');
+  if (existing) existing.remove();
+
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.textContent = msg;
+  Object.assign(toast.style, {
+    position: 'fixed',
+    bottom: '24px',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    background: isError ? 'var(--red)' : '#2c2418',
+    color: 'white',
+    padding: '12px 24px',
+    borderRadius: '10px',
+    fontSize: '14px',
+    fontFamily: "'DM Sans', sans-serif",
+    fontWeight: '600',
+    zIndex: '200',
+    boxShadow: 'var(--shadow-lg)',
+    animation: 'fadeIn 0.2s ease'
+  });
+  document.body.appendChild(toast);
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transition = 'opacity 0.3s';
+    setTimeout(() => toast.remove(), 300);
+  }, 2500);
+}
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+function init() {
+  loadLocal();
+  populateReturnProducts();
+
+  // Set today's date as default
+  const today = new Date().toISOString().slice(0, 10);
+  document.getElementById('deliveryDate').value = today;
+  document.getElementById('returnDate').value = today;
+  document.getElementById('paymentDate').value = today;
+
+  renderAll();
+  initFirebase();
+}
+
+init();
+</script>
+</body>
+</html>
