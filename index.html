@@ -497,6 +497,77 @@ body {
   padding-left: 4px;
 }
 .date-group-header:first-child { margin-top: 0; }
+
+/* ─── PRODUCT LIST PAGE ─── */
+.pl-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  background: var(--surface-alt);
+  border-radius: 10px;
+  margin-bottom: 8px;
+}
+.pl-item .pl-num {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  background: var(--accent-light);
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.pl-item .pl-name {
+  flex: 1;
+  font-weight: 600;
+  font-size: 14px;
+  min-width: 0;
+}
+.pl-item .pl-name input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  padding: 4px 0;
+}
+.pl-item .pl-name input:focus { outline: none; border-bottom: 2px solid var(--accent); }
+.pl-item .pl-price {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+.pl-item .pl-price input {
+  width: 60px;
+  padding: 6px 8px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+  color: var(--accent-dark);
+  background: white;
+}
+.pl-item .pl-price input:focus { outline: none; border-color: var(--accent); }
+.pl-item .pl-price span { font-size: 13px; color: var(--text-dim); }
+.pl-item .pl-delete {
+  width: 30px; height: 30px;
+  border: none;
+  background: var(--red-light);
+  color: var(--red);
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+.pl-item .pl-delete:active { background: var(--red); color: white; }
 </style>
 </head>
 <body>
@@ -514,7 +585,7 @@ body {
   <button class="tab active" data-page="orders">Sipariş</button>
   <button class="tab" data-page="deliveries">Teslimatlar</button>
   <button class="tab" data-page="balance">Bakiye</button>
-  <button class="tab" data-page="settings">Ayarlar</button>
+  <button class="tab" data-page="products">Ürünler</button>
 </div>
 
 <!-- ════════ SİPARİŞ SAYFASI ════════ -->
@@ -668,69 +739,15 @@ body {
   </div>
 </div>
 
-<!-- ════════ AYARLAR SAYFASI ════════ -->
-<div class="page" id="page-settings">
+<!-- ════════ ÜRÜNLER SAYFASI ════════ -->
+<div class="page" id="page-products">
   <div class="card">
     <div class="card-title">
-      <div class="icon" style="background:var(--accent-light);color:var(--accent)">🔥</div>
-      Firebase Yapılandırması
+      <div class="icon" style="background:var(--accent-light);color:var(--accent)">🥐</div>
+      Ürün Listesi
     </div>
-    <p style="font-size:13px;color:var(--text-dim);margin-bottom:14px;">
-      Firebase Console'dan aldığınız bilgileri buraya girin. Kaydettikten sonra veriler gerçek zamanlı senkronize edilir.
-    </p>
-    <div class="form-group">
-      <label>API Key</label>
-      <input class="config-input" id="cfgApiKey" placeholder="AIza...">
-    </div>
-    <div class="form-group">
-      <label>Auth Domain</label>
-      <input class="config-input" id="cfgAuthDomain" placeholder="projeniz.firebaseapp.com">
-    </div>
-    <div class="form-group">
-      <label>Project ID</label>
-      <input class="config-input" id="cfgProjectId" placeholder="projeniz">
-    </div>
-    <div class="form-group">
-      <label>Database URL</label>
-      <input class="config-input" id="cfgDbUrl" placeholder="https://projeniz-default-rtdb.firebaseio.com">
-    </div>
-    <div class="form-group">
-      <label>Storage Bucket</label>
-      <input class="config-input" id="cfgBucket" placeholder="projeniz.appspot.com">
-    </div>
-    <div class="form-group">
-      <label>App ID</label>
-      <input class="config-input" id="cfgAppId" placeholder="1:123:web:abc...">
-    </div>
-    <button class="btn btn-primary" id="btnSaveConfig">🔥 Firebase Bağlantısını Kaydet</button>
-  </div>
-
-  <div class="card">
-    <div class="card-title">
-      <div class="icon" style="background:var(--surface-alt)">💾</div>
-      Veri Yönetimi
-    </div>
-    <div class="setting-item">
-      <div>
-        <div class="setting-label">Verileri Dışa Aktar</div>
-        <div class="setting-desc">Tüm verilerinizi JSON olarak indirin</div>
-      </div>
-      <button class="btn btn-outline btn-sm" id="btnExport">Dışa Aktar</button>
-    </div>
-    <div class="setting-item">
-      <div>
-        <div class="setting-label">Verileri İçe Aktar</div>
-        <div class="setting-desc">JSON dosyasından geri yükleyin</div>
-      </div>
-      <button class="btn btn-outline btn-sm" id="btnImport">İçe Aktar</button>
-    </div>
-    <div class="setting-item">
-      <div>
-        <div class="setting-label">Tüm Verileri Sil</div>
-        <div class="setting-desc">Dikkat: Bu işlem geri alınamaz!</div>
-      </div>
-      <button class="btn btn-danger btn-sm" id="btnClearAll">Sil</button>
-    </div>
+    <div id="productList"></div>
+    <button class="btn btn-primary" id="btnAddProduct">＋ Yeni Ürün Ekle</button>
   </div>
 </div>
 
@@ -741,8 +758,6 @@ body {
   </div>
 </div>
 
-<input type="file" id="importFile" accept=".json" style="display:none">
-
 <!-- ════════ FIREBASE SDK ════════ -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -751,7 +766,7 @@ body {
 // ═══════════════════════════════════════════
 // DATA MODEL
 // ═══════════════════════════════════════════
-const PRODUCTS = [
+const DEFAULT_PRODUCTS = [
   { id: 'boyoz', name: 'Boyoz', price: 13 },
   { id: 'tahinli', name: 'Tahinli Boyoz', price: 20 },
   { id: 'cikolatali', name: 'Çikolatalı Boyoz', price: 20 },
@@ -799,6 +814,7 @@ const DEFAULT_ORDERS = {
 // STATE
 // ═══════════════════════════════════════════
 let state = {
+  products: JSON.parse(JSON.stringify(DEFAULT_PRODUCTS)),
   orders: JSON.parse(JSON.stringify(DEFAULT_ORDERS)),
   transactions: [],
   firebaseConfig: {
@@ -825,6 +841,7 @@ function loadLocal() {
   const saved = localStorage.getItem('borekTakip');
   if (saved) {
     const parsed = JSON.parse(saved);
+    state.products = parsed.products || JSON.parse(JSON.stringify(DEFAULT_PRODUCTS));
     state.orders = parsed.orders || JSON.parse(JSON.stringify(DEFAULT_ORDERS));
     state.transactions = (parsed.transactions || []).map((tx, i) => {
       if (!tx.id) tx.id = Date.now() + i;
@@ -849,6 +866,7 @@ function initFirebase() {
     dbRef.on('value', (snap) => {
       const data = snap.val();
       if (data) {
+        state.products = data.products || state.products;
         state.orders = data.orders || state.orders;
         state.transactions = (data.transactions || []).map((tx, i) => {
           if (!tx.id) tx.id = Date.now() + i;
@@ -879,6 +897,7 @@ function initFirebase() {
 function syncToFirebase() {
   if (dbRef) {
     dbRef.set({
+      products: state.products,
       orders: state.orders,
       transactions: state.transactions,
       lastUpdated: Date.now()
@@ -895,7 +914,7 @@ function renderOrders() {
   let html = '';
   let grandTotal = 0;
 
-  PRODUCTS.forEach(p => {
+  state.products.forEach(p => {
     const o = dayOrders[p.id] || { tava: 0, tepsi: 0 };
     const total = (parseInt(o.tava) || 0) + (parseInt(o.tepsi) || 0);
     const tutar = total * p.price;
@@ -1049,28 +1068,109 @@ function deleteTx(txId) {
 }
 
 // ═══════════════════════════════════════════
-// RENDER: SETTINGS
+// RENDER: PRODUCTS PAGE
 // ═══════════════════════════════════════════
-function renderSettings() {
-  if (state.firebaseConfig) {
-    document.getElementById('cfgApiKey').value = state.firebaseConfig.apiKey || '';
-    document.getElementById('cfgAuthDomain').value = state.firebaseConfig.authDomain || '';
-    document.getElementById('cfgProjectId').value = state.firebaseConfig.projectId || '';
-    document.getElementById('cfgDbUrl').value = state.firebaseConfig.databaseURL || '';
-    document.getElementById('cfgBucket').value = state.firebaseConfig.storageBucket || '';
-    document.getElementById('cfgAppId').value = state.firebaseConfig.appId || '';
+function renderProducts() {
+  const container = document.getElementById('productList');
+  let html = '';
+  state.products.forEach((p, i) => {
+    html += `
+      <div class="pl-item">
+        <div class="pl-num">${i + 1}</div>
+        <div class="pl-name">
+          <input type="text" value="${p.name}" 
+                 onchange="updateProductName('${p.id}', this.value)"
+                 onfocus="this.select()">
+        </div>
+        <div class="pl-price">
+          <span>₺</span>
+          <input type="number" min="0" value="${p.price}" 
+                 onchange="updateProductPrice('${p.id}', this.value)"
+                 onfocus="this.select()">
+        </div>
+        <button class="pl-delete" onclick="deleteProduct('${p.id}')" title="Sil">✕</button>
+      </div>`;
+  });
+  container.innerHTML = html;
+}
+
+function updateProductName(id, newName) {
+  const p = state.products.find(p => p.id === id);
+  if (p) {
+    p.name = newName.trim();
+    saveLocal();
+    syncToFirebase();
+    populateReturnProducts();
   }
+}
+
+function updateProductPrice(id, newPrice) {
+  const p = state.products.find(p => p.id === id);
+  if (p) {
+    p.price = parseFloat(newPrice) || 0;
+    saveLocal();
+    syncToFirebase();
+    renderOrders();
+  }
+}
+
+function deleteProduct(id) {
+  const p = state.products.find(p => p.id === id);
+  if (p && confirm(`"${p.name}" ürününü silmek istediğinize emin misiniz?`)) {
+    state.products = state.products.filter(p => p.id !== id);
+    // Siparişlerden de kaldır
+    ['haftaici','cumartesi','pazar'].forEach(day => {
+      if (state.orders[day] && state.orders[day][id]) {
+        delete state.orders[day][id];
+      }
+    });
+    saveLocal();
+    syncToFirebase();
+    renderAll();
+  }
+}
+
+function addProduct() {
+  const name = prompt('Yeni ürün adı:');
+  if (!name || !name.trim()) return;
+  const price = parseFloat(prompt('Fiyat (₺):'));
+  if (isNaN(price) || price < 0) { showToast('Geçersiz fiyat!', true); return; }
+
+  const id = name.trim().toLowerCase()
+    .replace(/ç/g,'c').replace(/ğ/g,'g').replace(/ı/g,'i')
+    .replace(/ö/g,'o').replace(/ş/g,'s').replace(/ü/g,'u')
+    .replace(/[^a-z0-9]/g,'_').replace(/_+/g,'_');
+
+  if (state.products.find(p => p.id === id)) {
+    showToast('Bu ürün zaten mevcut!', true);
+    return;
+  }
+
+  state.products.push({ id, name: name.trim(), price });
+
+  // Yeni ürün için sipariş satırları oluştur
+  ['haftaici','cumartesi','pazar'].forEach(day => {
+    if (!state.orders[day][id]) {
+      state.orders[day][id] = { tava: 0, tepsi: 0 };
+    }
+  });
+
+  saveLocal();
+  syncToFirebase();
+  renderAll();
+  showToast(`"${name.trim()}" eklendi`);
 }
 
 function populateReturnProducts() {
   const sel = document.getElementById('returnProduct');
-  sel.innerHTML = PRODUCTS.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+  sel.innerHTML = state.products.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
 }
 
 function renderAll() {
   renderOrders();
   renderBalance();
-  renderSettings();
+  renderProducts();
+  populateReturnProducts();
 }
 
 // ═══════════════════════════════════════════
@@ -1079,7 +1179,7 @@ function renderAll() {
 function calcDayTotal(dayType) {
   const dayOrders = state.orders[dayType];
   let total = 0;
-  PRODUCTS.forEach(p => {
+  state.products.forEach(p => {
     const o = dayOrders[p.id] || { tava: 0, tepsi: 0 };
     const qty = (parseInt(o.tava) || 0) + (parseInt(o.tepsi) || 0);
     total += qty * p.price;
@@ -1090,7 +1190,7 @@ function calcDayTotal(dayType) {
 function buildDeliveryDetail(dayType) {
   const dayOrders = state.orders[dayType];
   let parts = [];
-  PRODUCTS.forEach(p => {
+  state.products.forEach(p => {
     const o = dayOrders[p.id] || { tava: 0, tepsi: 0 };
     const qty = (parseInt(o.tava) || 0) + (parseInt(o.tepsi) || 0);
     if (qty > 0) parts.push(`${p.name}: ${qty}`);
@@ -1139,6 +1239,9 @@ document.getElementById('btnSaveOrder').addEventListener('click', () => {
   showToast('Sipariş kaydedildi!');
 });
 
+// Add product
+document.getElementById('btnAddProduct').addEventListener('click', addProduct);
+
 // Save delivery
 document.getElementById('btnSaveDelivery').addEventListener('click', () => {
   const date = document.getElementById('deliveryDate').value;
@@ -1178,7 +1281,7 @@ document.getElementById('btnSaveReturn').addEventListener('click', () => {
   if (!date) { showToast('Lütfen tarih seçin!', true); return; }
   if (qty <= 0) { showToast('Lütfen adet girin!', true); return; }
 
-  const product = PRODUCTS.find(p => p.id === productId);
+  const product = state.products.find(p => p.id === productId);
   const amount = qty * product.price;
 
   state.transactions.push({
@@ -1221,76 +1324,6 @@ document.getElementById('btnSavePayment').addEventListener('click', () => {
   document.getElementById('paymentAmount').value = '';
   document.getElementById('paymentNote').value = '';
   renderBalance();
-});
-
-// Firebase config save
-document.getElementById('btnSaveConfig').addEventListener('click', () => {
-  const config = {
-    apiKey: document.getElementById('cfgApiKey').value.trim(),
-    authDomain: document.getElementById('cfgAuthDomain').value.trim(),
-    projectId: document.getElementById('cfgProjectId').value.trim(),
-    databaseURL: document.getElementById('cfgDbUrl').value.trim(),
-    storageBucket: document.getElementById('cfgBucket').value.trim(),
-    appId: document.getElementById('cfgAppId').value.trim()
-  };
-
-  if (!config.apiKey || !config.databaseURL) {
-    showToast('API Key ve Database URL gerekli!', true);
-    return;
-  }
-
-  state.firebaseConfig = config;
-  saveLocal();
-  initFirebase();
-  syncToFirebase();
-  showToast('Firebase bağlandı!');
-});
-
-// Export
-document.getElementById('btnExport').addEventListener('click', () => {
-  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `borek-takip-${new Date().toISOString().slice(0,10)}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
-  showToast('Veriler dışa aktarıldı');
-});
-
-// Import
-document.getElementById('btnImport').addEventListener('click', () => {
-  document.getElementById('importFile').click();
-});
-document.getElementById('importFile').addEventListener('change', (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = (ev) => {
-    try {
-      const data = JSON.parse(ev.target.result);
-      state = { ...state, ...data };
-      saveLocal();
-      syncToFirebase();
-      renderAll();
-      showToast('Veriler içe aktarıldı!');
-    } catch (err) {
-      showToast('Geçersiz dosya!', true);
-    }
-  };
-  reader.readAsText(file);
-});
-
-// Clear all
-document.getElementById('btnClearAll').addEventListener('click', () => {
-  if (confirm('Tüm verileri silmek istediğinize emin misiniz?\nBu işlem geri alınamaz!')) {
-    state.orders = JSON.parse(JSON.stringify(DEFAULT_ORDERS));
-    state.transactions = [];
-    saveLocal();
-    syncToFirebase();
-    renderAll();
-    showToast('Tüm veriler silindi');
-  }
 });
 
 // ═══════════════════════════════════════════
