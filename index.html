@@ -596,6 +596,11 @@ body {
       Günlük Sipariş Listesi
     </div>
 
+    <div class="form-group">
+      <label>Teslimat Tarihi</label>
+      <input type="date" id="orderDate">
+    </div>
+
     <div class="day-selector">
       <button class="day-btn active" data-day="haftaici">Hafta İçi</button>
       <button class="day-btn" data-day="cumartesi">Cumartesi</button>
@@ -619,7 +624,7 @@ body {
       <div class="amount" id="orderTotal">₺0</div>
     </div>
 
-    <button class="btn btn-primary" id="btnSaveOrder">💾 Siparişi Kaydet</button>
+    <button class="btn btn-primary" id="btnSaveOrder">🚚 Siparişi Kaydet & Teslimat Oluştur</button>
   </div>
 </div>
 
@@ -1234,9 +1239,29 @@ document.querySelectorAll('.chip').forEach(chip => {
 
 // Save order
 document.getElementById('btnSaveOrder').addEventListener('click', () => {
+  const date = document.getElementById('orderDate').value;
+  if (!date) { showToast('Lütfen tarih seçin!', true); return; }
+
+  const amount = calcDayTotal(currentDay);
+  if (amount <= 0) { showToast('Sipariş tutarı 0, kontrol edin!', true); return; }
+
+  const detail = buildDeliveryDetail(currentDay);
+  const dayLabels = { haftaici: 'Hafta İçi', cumartesi: 'Cumartesi', pazar: 'Pazar' };
+
+  state.transactions.push({
+    type: 'teslimat',
+    date,
+    amount,
+    note: dayLabels[currentDay],
+    detail,
+    dayType: currentDay,
+    id: Date.now()
+  });
+
   saveLocal();
   syncToFirebase();
-  showToast('Sipariş kaydedildi!');
+  renderBalance();
+  showToast(`✅ Teslimat kaydedildi: ₺${amount.toLocaleString('tr-TR')}`);
 });
 
 // Add product
@@ -1369,6 +1394,7 @@ function init() {
 
   // Set today's date as default
   const today = new Date().toISOString().slice(0, 10);
+  document.getElementById('orderDate').value = today;
   document.getElementById('deliveryDate').value = today;
   document.getElementById('returnDate').value = today;
   document.getElementById('paymentDate').value = today;
