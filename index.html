@@ -835,6 +835,7 @@ let currentDay = 'haftaici';
 let currentFilter = 'all';
 let db = null;
 let dbRef = null;
+let skipNextSync = false;
 
 // ═══════════════════════════════════════════
 // LOCAL STORAGE
@@ -869,6 +870,7 @@ function initFirebase() {
     dbRef = db.ref('borekTakip');
 
     dbRef.on('value', (snap) => {
+      if (skipNextSync) { skipNextSync = false; return; }
       const data = snap.val();
       if (data) {
         state.products = data.products || state.products;
@@ -901,6 +903,7 @@ function initFirebase() {
 
 function syncToFirebase() {
   if (dbRef) {
+    skipNextSync = true;
     dbRef.set({
       products: state.products,
       orders: state.orders,
@@ -944,14 +947,39 @@ function renderOrders() {
   document.getElementById('orderTotal').textContent = `₺${grandTotal.toLocaleString('tr-TR')}`;
 }
 
+let syncTimer = null;
+function debouncedSync() {
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(() => { syncToFirebase(); }, 500);
+}
+
 function updateOrder(el) {
   const pid = el.dataset.product;
   const field = el.dataset.field;
   const val = parseInt(el.value) || 0;
   if (!state.orders[currentDay][pid]) state.orders[currentDay][pid] = { tava: 0, tepsi: 0 };
   state.orders[currentDay][pid][field] = val;
-  renderOrders();
+  
+  // Update just the row totals without rebuilding inputs
+  const row = el.closest('.product-row');
+  const product = state.products.find(p => p.id === pid);
+  const o = state.orders[currentDay][pid];
+  const total = (parseInt(o.tava) || 0) + (parseInt(o.tepsi) || 0);
+  const tutar = total * product.price;
+  const calcs = row.querySelectorAll('.calc');
+  calcs[0].textContent = total;
+  calcs[1].textContent = `₺${tutar.toLocaleString('tr-TR')}`;
+
+  // Update grand total
+  let grandTotal = 0;
+  state.products.forEach(p => {
+    const ord = state.orders[currentDay][p.id] || { tava: 0, tepsi: 0 };
+    grandTotal += ((parseInt(ord.tava) || 0) + (parseInt(ord.tepsi) || 0)) * p.price;
+  });
+  document.getElementById('orderTotal').textContent = `₺${grandTotal.toLocaleString('tr-TR')}`;
+
   saveLocal();
+  debouncedSync();
 }
 
 // ═══════════════════════════════════════════
